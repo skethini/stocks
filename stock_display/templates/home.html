@@ -1,24 +1,29 @@
-{% extends "base.html" %}
-{% block title %}Home Page{% endblock %}
-
-{% block pageHeader %}Stocks{% endblock %}
-
-{% block content %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Home Page</title>
+</head>
+<body>
+    <h1>Stocks</h1>
     <form method = "post">
         {% csrf_token %}
         {{ form.as_p}}
         <input type = "submit" value = "Lookup">
-        <!--hello-->
     </form>
 
     {% if plot_image %}
         <img src="data:image/png;base64,{{ plot_image }}" alt="Stock Plot">
-    {% endif %} <br>
+    {% endif %} 
 
-    {% if dates_and_prices %}
-        {% for item in dates_and_prices %}
-            {{ item.date }}: {{ item.price }} <br>
-        {% endfor %}
-    {% endif %}
+    <p>
+        {% if dates_and_prices %}
+            {% for item in dates_and_prices %}
+                {{ item.date }}: {{ item.price }} <br>
+            {% endfor %}
+        {% endif %}
+    </p>
 
-{% endblock %}
+</body>
+</html>
