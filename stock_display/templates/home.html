@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block title %}Home Page{% endblock %}
+
+{% block pageHeader %}Stocks{% endblock %}
+
+{% block content %}
+    <form method = "post">
+        {% csrf_token %}
+        {{ form.as_p}}
+        <input type = "submit" value = "Lookup">
+        <!--hello-->
+    </form>
+
+    {% if plot_image %}
+        <img src="data:image/png;base64,{{ plot_image }}" alt="Stock Plot">
+    {% endif %} <br>
+
+    {% if dates_and_prices %}
+        {% for item in dates_and_prices %}
+            {{ item.date }}: {{ item.price }} <br>
+        {% endfor %}
+    {% endif %}
+
+{% endblock %}
