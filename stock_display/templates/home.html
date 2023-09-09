@@ -4,14 +4,55 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Home Page</title>
+
+    <style>
+        .ui-autocomplete {
+            max-height: 150px;
+            overflow-y: auto;
+            overflow-x: hidden;
+            padding-right: 20px;
+        }
+        
+        .ui-menu-item {
+            padding: 8px;
+            font-size: 14px;
+            color: #333;
+        }
+        
+        .ui-menu-item:hover {
+            background-color: #ffffff;
+            cursor: pointer;
+        }
+    </style>
+
 </head>
 <body>
     <h1>Stocks</h1>
     <form method = "post">
         {% csrf_token %}
-        {{ form.as_p}}
-        <input type = "submit" value = "Lookup">
+        {{ form.ticker }}
+        <!-- <input type = "text" id = "stock_ticker_text" name = "ticker" placeholder = "Enter stock ticker"> -->
+        <button type = "submit">Lookup</button>
+        
     </form>
+
+    <link rel="stylesheet" href="//code.jquery.com/ui/1.13.2/themes/base/jquery-ui.css">
+    <link rel="stylesheet" href="/resources/demos/style.css">
+  
+    <script src="https://code.jquery.com/jquery-3.6.0.js"></script>
+    <script src="https://code.jquery.com/ui/1.13.2/jquery-ui.js"></script>
+    <script>
+        $(function () {
+            $("#stock_ticker_text").autocomplete({
+                source: "{% url 'autocomplete_ticker' %}",
+                minLength: 2,
+                select: function (event, ui) {
+                    $("#stock_ticker_text").val(ui.item.id);
+                }
+            });
+        });
+    </script>
+
 
     {% if plot_image %}
         <img src="data:image/png;base64,{{ plot_image }}" alt="Stock Plot">
@@ -22,6 +63,10 @@
             {% for item in dates_and_prices %}
                 {{ item.date }}: {{ item.price }} <br>
             {% endfor %}
+        {% endif %}
+
+        {% if invalidTicker %}
+            Please enter a valid stock ticker
         {% endif %}
     </p>
 
