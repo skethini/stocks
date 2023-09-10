@@ -1,20 +1,17 @@
 from django.shortcuts import render, HttpResponse
-from .models import TodoItem
 import requests
 from .forms import TickerChoiceForm
+from .forms import TimeFrameForm
 import matplotlib
 import matplotlib.pyplot as plt
 import io
-from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 import base64
 import matplotlib.ticker as ticker
 from django.http import JsonResponse
 matplotlib.use('agg')
 
 def autocomplete_ticker(request):
-    print("hey")
     query = request.GET.get('term', '')
-    print("query ",query)
     url = f"https://www.alphavantage.co/query?function=SYMBOL_SEARCH&keywords={query}&apikey=MNNSBHQUZBZUG9FC"
     try:
         response = requests.get(url)
@@ -27,7 +24,6 @@ def autocomplete_ticker(request):
     except:
         results = []
     
-    print("results: ",results)
     return JsonResponse(results, safe=False)
 
 
@@ -50,27 +46,34 @@ def generate_stock_plot(dates_and_prices):
     return plot_image
 
 
-
 def home(request):
     dates_and_prices = []
     plot_image_base64 = None
     invalidTicker = False
 
     if request.method == "POST":
-        form = TickerChoiceForm(request.POST)
-        print('LOOK HERE: ',request.POST.get('ticker', ''))
-        if form.is_valid():
-            ticker = form.cleaned_data['ticker']
-            url = f"https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol={ticker}&apikey=MNNSBHQUZBZUG9FC"
+        tickerForm = TickerChoiceForm(request.POST)
+        timeFrameForm = TimeFrameForm(request.POST)
+
+        if tickerForm.is_valid() and timeFrameForm.is_valid():
+            ticker = tickerForm.cleaned_data['ticker']
+            timeFrame =  timeFrameForm.cleaned_data['timeFrame']
+            timeFrameUpper = timeFrame.upper()
+            url = f"https://www.alphavantage.co/query?function=TIME_SERIES_{timeFrameUpper}&symbol={ticker}&apikey=MNNSBHQUZBZUG9FC"
+            print(url)
+
             try:
-                print("THIS IS AN intrystatement")
                 response = requests.get(url)
+                print(response.status_code)
                 if response.status_code == 200:
-                    print("THIS IS AN validstatus")
+                    timeFrame = timeFrame.capitalize()
+                    string = "Time Series (" + timeFrame + ")"
+                    print(string)
                     data = response.json()
-                    data = data["Time Series (Daily)"]
-                    for date, daily_data in data.items():
-                        opening_price = float(daily_data["4. close"])  
+                    data = data[string]
+                    print("DATA: ",data)
+                    for date, timeFrameData in data.items():
+                        opening_price = float(timeFrameData["4. close"])  
                         dates_and_prices.append({'date': date, 'price': opening_price})
                     
                     dates_and_prices = dates_and_prices[::-1]
@@ -79,22 +82,19 @@ def home(request):
                     plot_image_base64 = base64.b64encode(plot_image).decode('utf-8')
                     
                 else:
-                    print("THIS IS AN invalid status")
                     data = []
                     invalidTicker = True
             except:
-                print("THIS IS AN inexceptstatement")
+                print("EXCEPT")
                 data = []
                 invalidTicker = True
         else:
             invalidTicker = True
-            print("THIS IS FORMINVALID")
 
     else:
-        print("THIS IS AN else")
-        form = TickerChoiceForm()
+        tickerForm = TickerChoiceForm()
+        timeFrameForm = TimeFrameForm()
 
-    print("invalidTicker:", invalidTicker)
-    context = {'form': form, 'dates_and_prices': dates_and_prices, 'plot_image': plot_image_base64, 'invalidTicker': invalidTicker}
+    context = {'timeFrameForm': timeFrameForm, 'tickerForm': tickerForm, 'dates_and_prices': dates_and_prices, 'plot_image': plot_image_base64, 'invalidTicker': invalidTicker}
 
     return render(request, "home.html", context)

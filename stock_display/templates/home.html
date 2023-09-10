@@ -30,10 +30,9 @@
     <h1>Stocks</h1>
     <form method = "post">
         {% csrf_token %}
-        {{ form.ticker }}
-        <!-- <input type = "text" id = "stock_ticker_text" name = "ticker" placeholder = "Enter stock ticker"> -->
+        {{ tickerForm.ticker }}
+        {{ timeFrameForm.timeFrame }}
         <button type = "submit">Lookup</button>
-        
     </form>
 
     <link rel="stylesheet" href="//code.jquery.com/ui/1.13.2/themes/base/jquery-ui.css">
@@ -52,7 +51,6 @@
             });
         });
     </script>
-
 
     {% if plot_image %}
         <img src="data:image/png;base64,{{ plot_image }}" alt="Stock Plot">
